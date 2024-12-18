@@ -10,7 +10,7 @@ def send_at_command(ser, command):
     print(f"Response: {response.decode()}\n")
 
 # Open the serial port (update with your serial port, e.g., /dev/ttyUSB0 or COMx)
-serial_port = "/dev/ttyUSB2"  # Update to the correct serial port
+serial_port = "/dev/ttyUSB0"  # Update to the correct serial port
 baud_rate = 115200            # Baud rate for the communication
 
 try:
