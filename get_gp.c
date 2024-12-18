@@ -66,26 +66,39 @@ int main() {
     int n = read(fd, buffer, sizeof(buffer) - 1);
     if (n > 0) {
         buffer[n] = '\0';  // Null-terminate the string
+        printf("Response: %s\n", buffer);
+
         if (strstr(buffer, "+QGPSLOC:")) {
+            // Extract GPS data string after "+QGPSLOC:"
             char *gps_data = strchr(buffer, ':') + 1;
+            gps_data = strtok(gps_data, "\r\n"); // Remove any trailing newline/carriage return
+            printf("Parsed GPS data: %s\n", gps_data);
+
             double lat_decimal = 0.0, lon_decimal = 0.0;
             int lat_degrees, lon_degrees;
             double lat_minutes, lon_minutes;
             char lat_direction, lon_direction;
 
             // Parse latitude
-            sscanf(gps_data, "%2d%lf%c", &lat_degrees, &lat_minutes, &lat_direction);
+            int parsed = sscanf(gps_data, "%2d%lf%c", &lat_degrees, &lat_minutes, &lat_direction);
+            if (parsed == 3) {
+                lat_decimal = convert_to_decimal(lat_degrees, lat_minutes, lat_direction);
+                printf("Latitude: %.6f\n", lat_decimal);
+            } else {
+                printf("Failed to parse latitude correctly.\n");
+            }
 
-            // Parse longitude
-            sscanf(gps_data + 15, "%3d%lf%c", &lon_degrees, &lon_minutes, &lon_direction);
-
-            // Convert to decimal degrees
-            lat_decimal = convert_to_decimal(lat_degrees, lat_minutes, lat_direction);
-            lon_decimal = convert_to_decimal(lon_degrees, lon_minutes, lon_direction);
-
-            // Print the results
-            printf("Latitude: %.6f\n", lat_decimal);
-            printf("Longitude: %.6f\n", lon_decimal);
+            // Move to longitude (assuming it's the second part of the response)
+            char *lon_data = strchr(gps_data, ',') + 1;  // Move past the comma separator
+            parsed = sscanf(lon_data, "%3d%lf%c", &lon_degrees, &lon_minutes, &lon_direction);
+            if (parsed == 3) {
+                lon_decimal = convert_to_decimal(lon_degrees, lon_minutes, lon_direction);
+                printf("Longitude: %.6f\n", lon_decimal);
+            } else {
+                printf("Failed to parse longitude correctly.\n");
+            }
+        } else {
+            printf("GPS data not found in response.\n");
         }
     } else {
         printf("Failed to get GPS data\n");
